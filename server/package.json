@@ -4,6 +4,7 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
+    "start": "tsx --no-warnings src/server.ts",
     "dev": "tsx --no-warnings --watch src/server.ts"
   },
   "keywords": [],
