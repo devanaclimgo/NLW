@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "tsx --env-file .env --no-warnings src/server.ts",
-    "dev": "tsx --env-file .env --no-warnings --watch src/server.ts"
+    "dev": "tsx --env-file .env --no-warnings --watch src/server.ts",
+    "db:seed": "node --env-file .env --experimental-strip-types --no-warnings src/db/seed.ts"
   },
   "keywords": [],
   "author": "",
