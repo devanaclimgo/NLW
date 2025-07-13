@@ -15,6 +15,7 @@
     "@biomejs/biome": "2.0.6",
     "@types/node": "^24.0.13",
     "drizzle-kit": "^0.31.4",
+    "drizzle-seed": "^0.3.1",
     "tsx": "^4.20.3",
     "typescript": "^5.8.3",
     "ultracite": "5.0.32"
