@@ -1,49 +1,56 @@
-import { GoogleGenAI } from '@google/genai'
+import { GoogleGenerativeAI } from '@google/generative-ai'
 import { env } from '../env.ts'
 
-const gemini = new GoogleGenAI({
-  apiKey:env.GOOGLE_API_KEY,
-})
+const genAI = new GoogleGenerativeAI(env.GOOGLE_API_KEY)
 
-const model = 'gemini-2.5-flash'
+// Prefer fast, low-latency model for chat/QA
+const GENERATION_MODEL = 'gemini-2.5-flash'
+const EMBEDDING_MODEL = 'text-embedding-004'
 
 export async function transcribeAudio(audioAsBase64: string, mimeType: string) {
-  const response = await gemini.models.generateContent({
-    model,
+  const model = genAI.getGenerativeModel({ model: GENERATION_MODEL })
+
+  const response = await model.generateContent({
     contents: [
       {
-        text: 'Transcreva o áudio para português do Brasil. Seja preciso e natural na transcrição. Mantenha a pontuação adequada e divida o texto em parágrafos quando for apropriado.',
-      },
-      {
-        inlineData: {
-          mimeType,
-          data: audioAsBase64,
-        },
+        role: 'user',
+        parts: [
+          {
+            text: 'Transcreva o áudio para português do Brasil. Seja preciso e natural na transcrição. Mantenha a pontuação adequada e divida o texto em parágrafos quando for apropriado.',
+          },
+          {
+            inlineData: {
+              mimeType,
+              data: audioAsBase64,
+            },
+          },
+        ],
       },
     ],
   })
 
-  if (!response.text) {
+  const text = response.response.text()
+
+  if (!text) {
     throw new Error('Não foi possível converter o áudio')
   }
 
-  return response.text
+  return text
 }
 
 export async function generateEmbeddings(text: string) {
-  const response = await gemini.models.embedContent({
-    model: 'text-embedding-004',
-    contents: [{ text }],
-    config: {
-      taskType: 'RETRIEVAL_DOCUMENT',
-    },
+  const embeddingModel = genAI.getGenerativeModel({ model: EMBEDDING_MODEL })
+  const result = await embeddingModel.embedContent({
+    content: { role: 'user', parts: [{ text }] },
   })
 
-  if (!response.embeddings?.[0].values) {
+  const values = result.embedding?.values
+
+  if (!values || values.length === 0) {
     throw new Error('Não foi possível gerar os embeddings.')
   }
 
-  return response.embeddings[0].values
+  return values
 }
 
 export async function generateAnswer(
@@ -70,18 +77,21 @@ export async function generateAnswer(
     - Se for citar o contexto, utilize o temo "conteúdo da aula";
   `.trim()
 
-  const response = await gemini.models.generateContent({
-    model,
+  const model = genAI.getGenerativeModel({ model: GENERATION_MODEL })
+  const response = await model.generateContent({
     contents: [
       {
-        text: prompt,
+        role: 'user',
+        parts: [{ text: prompt }],
       },
     ],
   })
 
-  if (!response.text) {
+  const text = response.response.text()
+
+  if (!text) {
     throw new Error('Falha ao gerar resposta pelo Gemini')
   }
 
-  return response.text
+  return text
 }
